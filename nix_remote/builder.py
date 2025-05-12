@@ -1,79 +1,11 @@
-import argparse
 import base64
 import multiprocessing
-import sys
-import textwrap
+import platform
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Self
-import subprocess
-import tempdir
-import logging
 
 import toml
-
-# https://nixos.org/manual/nixpkgs/stable/#sec-darwin-builder
-
-
-def main() -> None:
-    args = Args.parse_args()
-
-    if sys.platform == "darwin":
-        args.builders.append(
-            Builder(
-                host="ssh-ng://builder@linux-builder",
-                systems=[],
-                private_key=Path("/etc/nix/builder_ed25519"),
-                max_builds=multiprocessing.cpu_count(),
-                speed_factor=None,
-                features=["benchmark", "big-parallel"],
-                mandatory_features=[],
-                public_key="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJBWcxb/Blaqt1auOtE+F8QUWrUotiC5qBJ+UuEWdVCb root@nixos",
-            )
-        )
-
-    proc = subprocess.
-    # nix run nixpkgs#darwin.linux-builder
-
-    nix_config = textwrap.dedent(
-        """
-        builders = {builders}
-
-        # Not strictly necessary, but this will reduce your disk utilization
-        builders-use-substitutes = true
-        """.format(
-            builders=" ; ".join([builder.as_nix_config() for builder in args.builders])
-        )
-    )
-
-    env = {
-        "NIX_CONFIG": nix_config,
-    }
-
-
-@dataclass
-class Args:
-    builders: list["Builder"]
-
-    @classmethod
-    def _argparser(cls) -> argparse.ArgumentParser:
-        parser = argparse.ArgumentParser()
-        parser.add_argument(
-            "--builders",
-            type=Path,
-            help="Path to a TOML file containing builder definitions",
-        )
-        return parser
-
-    @classmethod
-    def parse_args(cls) -> "Self":
-        args = cls._argparser().parse_args()
-
-        builders = parse_builders(args.builders) if args.builders else []
-
-        return cls(
-            builders=builders,
-        )
 
 
 @dataclass
@@ -126,6 +58,28 @@ class Builder:
 
     This is NOT base64-encoded.
     """
+
+    @classmethod
+    def darwin_builder(cls) -> Self:
+        machine = platform.machine()
+        match machine:
+            case "arm64":
+                arch = "aarch64"
+            case "x86_64":
+                arch = "x86_64"
+            case _:
+                raise RuntimeError(f"Unknown architecture: {machine}")
+
+        return cls(
+            host="ssh-ng://builder@linux-builder",
+            systems=[f"{arch}-linux"],
+            private_key=Path("/etc/nix/builder_ed25519"),
+            max_builds=multiprocessing.cpu_count(),
+            speed_factor=None,
+            features=["benchmark", "big-parallel"],
+            mandatory_features=[],
+            public_key="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJBWcxb/Blaqt1auOtE+F8QUWrUotiC5qBJ+UuEWdVCb root@nixos",
+        )
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
@@ -183,11 +137,7 @@ class Builder:
 
         return " ".join(ret)
 
-
-def parse_builders(path: Path) -> list[Builder]:
-    raw = toml.load(path)
-    return [Builder.from_dict(builder) for builder in raw["builders"]]
-
-
-if __name__ == "__main__":
-    main()
+    @classmethod
+    def parse_from_config(cls, path: Path) -> list[Self]:
+        raw = toml.load(path)
+        return [cls.from_dict(builder) for builder in raw["builders"]]
