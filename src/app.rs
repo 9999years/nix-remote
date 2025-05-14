@@ -1,3 +1,6 @@
+use std::env::VarError;
+use std::process::Command;
+
 use calm_io::stdout;
 use camino::Utf8PathBuf;
 use clap::CommandFactory;
@@ -6,6 +9,7 @@ use miette::miette;
 use miette::IntoDiagnostic;
 use tracing::instrument;
 
+use crate::builder::Builder;
 use crate::cli;
 use crate::config::Config;
 
@@ -46,12 +50,7 @@ impl App {
             return Ok(());
         }
 
-        println!(
-            "{}",
-            crate::builder::Builder::darwin_builder()?.as_nix_config()
-        );
-
-        Ok(())
+        self.run_inner()
     }
 
     #[instrument(level = "trace", skip(self))]
@@ -82,6 +81,32 @@ impl App {
         }
 
         fs::write(path, Config::DEFAULT).into_diagnostic()?;
+
+        Ok(())
+    }
+
+    fn run_inner(mut self) -> miette::Result<()> {
+        let mut command = Command::new(self.config.cli.command);
+
+        // TODO: This should be configurable and only enabled on macOS.
+        self.config.file.builders.push(Builder::darwin_builder()?);
+
+        command.args(self.config.cli.args);
+
+        let mut nix_config = match std::env::var("NIX_CONFIG") {
+            Ok(value) => value,
+            Err(VarError::NotPresent) => "".into(),
+            Err(VarError::NotUnicode(value)) => {
+                return Err(miette::miette!("$NIX_CONFIG is not Unicode: {value:?}"));
+            }
+        };
+
+        nix_config.push('\n');
+        nix_config.push_str(&self.config.file.as_nix_config());
+
+        tracing::debug!(%nix_config, "Computed $NIX_CONFIG");
+
+        command.env("NIX_CONFIG", &nix_config);
 
         Ok(())
     }

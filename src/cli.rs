@@ -36,4 +36,12 @@ pub struct Cli {
     #[cfg(feature = "clap_mangen")]
     #[arg(long)]
     pub generate_manpages: Option<camino::Utf8PathBuf>,
+
+    /// The command to run. Defaults to `nix`.
+    #[arg(short, long, default_value = "nix")]
+    pub command: String,
+
+    /// Arguments to pass to `nix` (or the `--command`).
+    #[arg()]
+    pub args: Vec<String>,
 }

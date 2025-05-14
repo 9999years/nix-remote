@@ -1,6 +1,7 @@
 use camino::Utf8PathBuf;
 use clap::Parser;
 use fs_err as fs;
+use itertools::Itertools;
 use miette::Context;
 use miette::IntoDiagnostic;
 use serde::Deserialize;
@@ -83,9 +84,23 @@ fn config_file_path(dirs: &BaseDirectories) -> miette::Result<Utf8PathBuf> {
 #[derive(Debug, Default, Deserialize, PartialEq)]
 #[serde(default, deny_unknown_fields)]
 pub struct ConfigFile {
-    builders: Vec<Builder>,
+    pub builders: Vec<Builder>,
 }
 
 impl ConfigFile {
     pub const FILE_NAME: &str = "builders.toml";
+
+    pub fn as_nix_config(&self) -> String {
+        let mut ret = String::from("builders-use-substitutes = true\nbuilders = ");
+
+        ret.push_str(
+            &self
+                .builders
+                .iter()
+                .map(|builder| builder.as_nix_config())
+                .join(" ; "),
+        );
+
+        ret
+    }
 }
