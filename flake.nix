@@ -87,8 +87,6 @@
         (lib.filterAttrs (name: value: lib.isDerivation value) packages)
         // {
           default = packages.nix-remote;
-          nix-remote-user-manual = packages.nix-remote.user-manual;
-          nix-remote-user-manual-tar-xz = packages.nix-remote.user-manual-tar-xz;
 
           # This lets us use `nix run .#cargo` to run Cargo commands without
           # loading the entire `nix develop` shell (which includes

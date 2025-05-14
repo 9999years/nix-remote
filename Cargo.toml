@@ -27,8 +27,9 @@ path = "src/lib.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+base64 = "0.22.1"
 calm_io = "0.1.1"
-camino = "1.1.6"
+camino = { version = "1.1.6", features = ["serde1"] }
 clap = { version = "4.5.4", features = ["derive", "wrap_help", "env"] }
 clap_complete = "4.5.1"
 clap_mangen = { version = "0.2.20", optional = true }
@@ -52,6 +53,7 @@ toml = "0.8.19"
 tracing = { version = "0.1.40", features = ["attributes"] }
 tracing-human-layer = "0.1.3"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter", "registry"] }
+uname = "0.1.1"
 unindent = "0.2.3"
 utf8-command = "1.0.1"
 walkdir = "2.5.0"

@@ -9,7 +9,8 @@ lib.makeScope newScope (
     inherit inputs;
   }
   // (lib.packagesFromDirectoryRecursive {
-    directory = inputs.self + "/nix/packages";
+    # See: https://github.com/NixOS/nixpkgs/pull/406885
+    directory = ./packages;
     inherit (self) callPackage;
   })
 )

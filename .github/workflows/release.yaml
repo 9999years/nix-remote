@@ -137,12 +137,6 @@ jobs:
           mv target/aarch64-unknown-linux-musl/release/nix-remote \
              target/nix-remote-aarch64-linux
 
-      - name: Build user manual
-        if: runner.os == 'Linux'
-        run: |
-          RESULT=$(nix build --no-link --print-out-paths --print-build-logs .#nix-remote.user-manual-tar-xz)
-          cp "$RESULT" target/nix-remote-user-manual.tar.xz
-
       - name: Upload macOS executable
         uses: actions/upload-artifact@v4
         if: runner.os == 'macOS'
@@ -159,7 +153,6 @@ jobs:
           path: |
             target/nix-remote-x86_64-linux
             target/nix-remote-aarch64-linux
-            target/nix-remote-user-manual.tar.xz
 
       - name: Publish to crates.io
         if: runner.os == 'Linux'

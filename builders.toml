@@ -1,9 +1,9 @@
 [[builders]]
 host = "ssh-ng://fraktur"
 systems = ["x86_64-linux"]
-private-key = "~/.ssh/id_ed25519"
-max-builds = 8
-speed-factor = 1.0
+private_key = "~/.ssh/id_ed25519"
+max_builds = 8
+speed_factor = 1.0
 features = ["kvm", "big-parallel"]
-mandatory-features = []
-public-key = ""
+mandatory_features = []
+public_key = ""

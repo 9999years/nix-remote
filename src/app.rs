@@ -46,6 +46,11 @@ impl App {
             return Ok(());
         }
 
+        println!(
+            "{}",
+            crate::builder::Builder::darwin_builder()?.as_nix_config()
+        );
+
         Ok(())
     }
 

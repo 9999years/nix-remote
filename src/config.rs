@@ -80,7 +80,7 @@ fn config_file_path(dirs: &BaseDirectories) -> miette::Result<Utf8PathBuf> {
 /// For documentation, see the default configuration file (`../builders.toml`).
 ///
 /// The default configuration file is accessible as [`Config::DEFAULT`].
-#[derive(Debug, Default, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Default, Deserialize, PartialEq)]
 #[serde(default, deny_unknown_fields)]
 pub struct ConfigFile {
     builders: Vec<Builder>,

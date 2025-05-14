@@ -100,8 +100,6 @@ let
       inherit
         checks
         devShell
-        user-manual
-        user-manual-tar-xz
         ;
     };
   };
@@ -135,72 +133,22 @@ let
         (commonArgs.postInstall or "")
         + lib.optionalString can-run-nix-remote ''
           manpages=$(mktemp -d)
-          ${nix-remote} manpages "$manpages"
+          ${nix-remote} --generate-manpages "$manpages"
           for manpage in "$manpages"/*; do
             installManPage "$manpage"
           done
 
           installShellCompletion --cmd nix-remote \
-            --bash <(${nix-remote} completions bash) \
-            --fish <(${nix-remote} completions fish) \
-            --zsh <(${nix-remote} completions zsh)
+            --bash <(${nix-remote} --generate-completions bash) \
+            --fish <(${nix-remote} --generate-completions fish) \
+            --zsh  <(${nix-remote} --generate-completions zsh)
 
           rm -rf "$out/bin"
         '';
     }
   );
 
-  user-manual = stdenv.mkDerivation {
-    pname = "nix-remote-user-manual";
-    inherit (commonArgs) version;
-
-    phases = [
-      "unpackPhase"
-      "buildPhase"
-      "installPhase"
-    ];
-
-    src = inputs.self;
-    sourceRoot = "source/docs";
-
-    nativeBuildInputs = [ mdbook ];
-
-    buildPhase = ''
-      mdbook build
-    '';
-
-    installPhase = ''
-      mkdir -p "$out/share/nix-remote"
-      cp -r book "$out/share/nix-remote/html-manual"
-    '';
-  };
-
-  user-manual-tar-xz = stdenv.mkDerivation {
-    name = "nix-remote-user-manual-${commonArgs.version}.tar.xz";
-
-    src = user-manual;
-
-    phases = [
-      "unpackPhase"
-      "installPhase"
-    ];
-
-    installPhase = ''
-      mv share/nix-remote/html-manual nix-remote-user-manual
-
-      tar --create \
-        --verbose \
-        --auto-compress \
-        --file "$out" \
-        nix-remote-user-manual
-    '';
-  };
-
   checks = {
-    inherit
-      user-manual
-      user-manual-tar-xz
-      ;
 
     nix-remote-nextest = craneLib.cargoNextest (
       commonArgs
